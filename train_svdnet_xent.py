@@ -109,7 +109,7 @@ def main():
     # ranklogger = RankLogger(args.source_names, args.target_names)
     print('=> Start training')
 
-    train_base(model)
+    # train_base(model)
     train_RRI(model, 7)
 
     elapsed = round(time.time() - time_start)
