@@ -29,6 +29,8 @@ from torchreid.optimizers import init_optimizer
 from torchreid.lr_schedulers import init_lr_scheduler
 
 
+os.environ['TORCH_HOME'] = os.path.join(os.path.dirname(__file__), '..')
+
 testloader_dict = trainloader = criterion = None
 use_gpu = False
 
