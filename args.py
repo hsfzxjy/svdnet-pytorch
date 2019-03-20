@@ -9,9 +9,9 @@ def argument_parser():
     # ************************************************************
     parser.add_argument('--root', type=str, default='data',
                         help='root path to data directory')
-    parser.add_argument('-s', '--source-names', type=str, required=True, nargs='+', default=['market1501'],
+    parser.add_argument('-s', '--source-names', type=str, required=False, nargs='+', default=['market1501'],
                         help='source datasets (delimited by space)')
-    parser.add_argument('-t', '--target-names', type=str, required=True, nargs='+', default=['market1501'],
+    parser.add_argument('-t', '--target-names', type=str, required=False, nargs='+', default=['market1501'],
                         help='target datasets (delimited by space)')
     parser.add_argument('-j', '--workers', default=4, type=int,
                         help='number of data loading workers (tips: 4 or 8 times number of gpus)')
