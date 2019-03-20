@@ -344,7 +344,7 @@ def train_RRI(model, Ts: int=7):
     for T in range(Ts):
         print('=== T = {} ==='.format(T))
         print('Replacing eigen layer weight...')
-        replace_weight(model.fc)
+        replace_weight(model.module.fc)
         print('Replaced.')
         print('--- Restraint ({}) ---'.format(T))
         train_R(model, base_lrs[T], T, fix_eigen_layer=True)
