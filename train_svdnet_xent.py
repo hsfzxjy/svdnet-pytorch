@@ -29,7 +29,7 @@ from torchreid.optimizers import init_optimizer
 from torchreid.lr_schedulers import init_lr_scheduler
 
 
-os.environ['TORCH_HOME'] = os.path.join(os.path.dirname(__file__), '..')
+os.environ['TORCH_HOME'] = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '.torch'))
 
 testloader_dict = trainloader = criterion = None
 use_gpu = False
