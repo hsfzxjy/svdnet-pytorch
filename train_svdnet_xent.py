@@ -47,7 +47,7 @@ def replace_weight(layer):
 
     _, _, V = torch.svd(layer.weight, some=False)
     with torch.no_grad():
-        layer.weight.copy_(layer.weight.clone() @ V.clone().t())
+        layer.weight.copy_(layer.weight.clone() @ V.clone())
 
     return layer
 
