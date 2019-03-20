@@ -278,15 +278,15 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
         for p in eigen_layer.parameters():
             p.requires_grad = False
 
-        # stage_name = 'restraint'
+        stage_name = 'restraint'
     else:
         model.train()
         for p in model.parameters():
             p.requires_grad = True
 
-        # stage_name = 'relaxation'
+        stage_name = 'relaxation'
 
-    # prefix = '{}_{}_'.format(T, stage_name)
+    prefix = '{}_{}_'.format(T, stage_name)
 
     optimizer, scheduler = get_RRI_optimizer(model, lr)
 
@@ -303,13 +303,13 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
             galleryloader = testloader_dict[name]['gallery']
             rank1 = test(model, queryloader, galleryloader, use_gpu)
 
-        save_checkpoint({
-            'state_dict': model.state_dict(),
-            'rank1': rank1,
-            'epoch': 0,
-            'arch': args.arch,
-            'optimizer': (),
-        }, args.save_dir, prefix='final_')
+    save_checkpoint({
+        'state_dict': model.state_dict(),
+        'rank1': rank1,
+        'epoch': 0,
+        'arch': args.arch,
+        'optimizer': (),
+    }, args.save_dir, prefix=prefix)
 
 
 def train_base(model):
