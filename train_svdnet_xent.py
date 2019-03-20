@@ -46,7 +46,7 @@ def corr_metric(W: 'K x N'):
 def replace_weight(layer):
 
     _, _, V = torch.svd(layer.weight, some=False)
-    layer.weight.copy_(layer.weight @ V.t())
+    layer.weight.copy_(layer.weight.clone() @ V.clone().t())
 
     return layer
 
