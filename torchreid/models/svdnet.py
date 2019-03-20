@@ -213,7 +213,6 @@ class ResNet(nn.Module):
             v = self.fc(v)
 
         if not self.training:
-            return f
             return v
 
         y = self.classifier(v)
