@@ -127,10 +127,10 @@ def train(epoch, model, criterion, optimizer, trainloader, use_gpu, fixbase=Fals
 
     model.train()
 
-    if fixbase or args.always_fixbase:
-        open_specified_layers(model, args.open_layers)
-    else:
-        open_all_layers(model)
+    # if fixbase or args.always_fixbase:
+    #     open_specified_layers(model, args.open_layers)
+    # else:
+    #     open_all_layers(model)
 
     end = time.time()
     for batch_idx, (imgs, pids, _, _) in enumerate(trainloader):
