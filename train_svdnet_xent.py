@@ -273,7 +273,7 @@ def get_RRI_optimizer(
 def train_R(model, lr, T, fix_eigen_layer: bool=False):
 
     if fix_eigen_layer:
-        eigen_layer = model.fc
+        eigen_layer = model.module.fc
         eigen_layer.eval()
         for p in eigen_layer.parameters():
             p.requires_grad = False
