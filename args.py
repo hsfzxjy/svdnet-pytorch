@@ -3,15 +3,15 @@ import argparse
 
 def argument_parser():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-    
+
     # ************************************************************
     # Datasets (general)
     # ************************************************************
     parser.add_argument('--root', type=str, default='data',
                         help='root path to data directory')
-    parser.add_argument('-s', '--source-names', type=str, required=True, nargs='+',
+    parser.add_argument('-s', '--source-names', type=str, required=True, nargs='+', default=['market1501'],
                         help='source datasets (delimited by space)')
-    parser.add_argument('-t', '--target-names', type=str, required=True, nargs='+',
+    parser.add_argument('-t', '--target-names', type=str, required=True, nargs='+', default=['market1501'],
                         help='target datasets (delimited by space)')
     parser.add_argument('-j', '--workers', default=4, type=int,
                         help='number of data loading workers (tips: 4 or 8 times number of gpus)')
@@ -25,10 +25,10 @@ def argument_parser():
                         help='sampler for trainloader')
     parser.add_argument('--combineall', action='store_true',
                         help='combine all data in a dataset (train+query+gallery) for training')
-    
+
     # ************************************************************
     # Data augmentation
-    # ************************************************************ 
+    # ************************************************************
     parser.add_argument('--random-erase', action='store_true',
                         help='use random erasing for data augmentation')
     parser.add_argument('--color-jitter', action='store_true',
@@ -45,7 +45,7 @@ def argument_parser():
                         help='how to sample images from a tracklet')
     parser.add_argument('--pool-tracklet-features', type=str, default='avg', choices=['avg', 'max'],
                         help='how to pool features over a tracklet (for video reid)')
-    
+
     # ************************************************************
     # Dataset-specific setting
     # ************************************************************
@@ -58,7 +58,7 @@ def argument_parser():
 
     parser.add_argument('--market1501-500k', action='store_true',
                         help='add 500k distractors to the gallery set for market1501')
-    
+
     # ************************************************************
     # Optimization options
     # ************************************************************
@@ -67,7 +67,7 @@ def argument_parser():
     parser.add_argument('--lr', default=0.0003, type=float,
                         help='initial learning rate')
     parser.add_argument('--weight-decay', default=5e-04, type=float,
-                        help='weight decay')   
+                        help='weight decay')
     # sgd
     parser.add_argument('--momentum', default=0.9, type=float,
                         help='momentum factor for sgd and rmsprop')
@@ -83,7 +83,7 @@ def argument_parser():
                         help='exponential decay rate for adam\'s first moment')
     parser.add_argument('--adam-beta2', default=0.999, type=float,
                         help='exponential decay rate for adam\'s second moment')
-    
+
     # ************************************************************
     # Training hyperparameters
     # ************************************************************
@@ -96,7 +96,7 @@ def argument_parser():
                         help='training batch size')
     parser.add_argument('--test-batch-size', default=100, type=int,
                         help='test batch size')
-    
+
     parser.add_argument('--always-fixbase', action='store_true',
                         help='always fix base network and only train specified layers')
     parser.add_argument('--fixbase-epoch', type=int, default=0,
@@ -138,11 +138,11 @@ def argument_parser():
                         help='weight to balance cross entropy loss')
     parser.add_argument('--lambda-htri', type=float, default=1,
                         help='weight to balance hard triplet loss')
-    
+
     # ************************************************************
     # Architecture
     # ************************************************************
-    parser.add_argument('-a', '--arch', type=str, default='resnet50')
+    parser.add_argument('-a', '--arch', type=str, default='svdnet_fc1024')
     parser.add_argument('--no-pretrained', action='store_true',
                         help='do not load pretrained weights')
 
@@ -157,7 +157,7 @@ def argument_parser():
                         help='evaluation frequency (set to -1 to test only in the end)')
     parser.add_argument('--start-eval', type=int, default=0,
                         help='start to evaluate after a specific epoch')
-    
+
     # ************************************************************
     # Miscs
     # ************************************************************

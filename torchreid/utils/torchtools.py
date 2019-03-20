@@ -16,7 +16,7 @@ import torch.nn as nn
 from .iotools import mkdir_if_missing
 
 
-def save_checkpoint(state, save_dir, is_best=False, remove_module_from_keys=False):
+def save_checkpoint(state, save_dir, prefix='', is_best=False, remove_module_from_keys=False):
     mkdir_if_missing(save_dir)
     if remove_module_from_keys:
         # remove 'module.' in state_dict's keys
@@ -29,7 +29,7 @@ def save_checkpoint(state, save_dir, is_best=False, remove_module_from_keys=Fals
         state['state_dict'] = new_state_dict
     # save
     epoch = state['epoch']
-    fpath = osp.join(save_dir, 'model.pth.tar-' + str(epoch))
+    fpath = osp.join(save_dir, prefix + 'model.pth.tar-' + str(epoch))
     torch.save(state, fpath)
     print('Checkpoint saved to "{}"'.format(fpath))
     if is_best:
@@ -74,7 +74,7 @@ def adjust_learning_rate(optimizer, base_lr, epoch, stepsize=20, gamma=0.1,
     else:
         # decay learning rate by gamma for every stepsize
         lr = base_lr * (gamma ** (epoch // stepsize))
-    
+
     for param_group in optimizer.param_groups:
         param_group['lr'] = lr
 
