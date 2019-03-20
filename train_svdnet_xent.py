@@ -300,15 +300,15 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
             print('Evaluating {} ...'.format(name))
             queryloader = testloader_dict[name]['query']
             galleryloader = testloader_dict[name]['gallery']
-            rank1 = test(model, queryloader, galleryloader, use_gpu)  # noqa
+            rank1 = test(model, queryloader, galleryloader, use_gpu)
 
-    # save_checkpoint({
-    #     'state_dict': model.state_dict(),
-    #     'rank1': rank1,
-    #     'epoch': epoch + 1,
-    #     'arch': args.arch,
-    #     'optimizer': optimizer.state_dict(),
-    # }, args.save_dir, prefix=prefix)
+        save_checkpoint({
+            'state_dict': model.state_dict(),
+            'rank1': rank1,
+            'epoch': 0,
+            'arch': args.arch,
+            'optimizer': (),
+        }, args.save_dir, prefix='final_')
 
 
 def train_base(model):
@@ -317,7 +317,7 @@ def train_base(model):
 
     model.train()
     print('=== train base ===')
-    for epoch in range(1, 61 + 1):
+    for epoch in range(61):
         train(epoch, model, criterion, optimizer, trainloader, use_gpu=use_gpu)
 
         print('=> Test')
@@ -331,7 +331,7 @@ def train_base(model):
     save_checkpoint({
         'state_dict': model.state_dict(),
         'rank1': rank1,
-        'epoch': epoch + 1,
+        'epoch': 0,
         'arch': args.arch,
         'optimizer': optimizer.state_dict(),
     }, args.save_dir, prefix='base_')
