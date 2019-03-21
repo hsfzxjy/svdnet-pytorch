@@ -283,6 +283,7 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
         eigen_layer.eval()
         for p in eigen_layer.parameters():
             p.requires_grad = False
+        print(eigen_layer.weight.requires_grad)
 
         stage_name = 'restraint'
     else:
