@@ -90,6 +90,9 @@ def main():
 
     if args.resume and check_isfile(args.resume):
         args.start_epoch = resume_from_checkpoint(args.resume, model, optimizer=None)
+        resumed = True
+    else:
+        resumed = False
 
     if args.evaluate:
         print('Evaluate only')
@@ -112,7 +115,8 @@ def main():
     # ranklogger = RankLogger(args.source_names, args.target_names)
     print('=> Start training')
 
-    train_base(model)
+    if not resumed:
+        train_base(model)
     train_RRI(model, 7)
 
     elapsed = round(time.time() - time_start)
