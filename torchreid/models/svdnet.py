@@ -1,6 +1,8 @@
 from __future__ import absolute_import
 from __future__ import division
 
+import os
+
 from copy import deepcopy
 import torch
 from torch import nn
@@ -365,13 +367,14 @@ class BranchedResNet(nn.Module):
         predict_features = []
         xent_features = []
 
-        # Branch 1
-        x1 = self.layer4_1(f)
-        x1 = self.global_avgpool(x1).squeeze()
-        x1 = self.fc(x1)
-        predict_features.append(x1)
-        x1 = self.classifier1(x1)
-        xent_features.append(x1)
+        if not os.environ.get('no_global'):
+            # Branch 1
+            x1 = self.layer4_1(f)
+            x1 = self.global_avgpool(x1).squeeze()
+            x1 = self.fc(x1)
+            predict_features.append(x1)
+            x1 = self.classifier1(x1)
+            xent_features.append(x1)
 
         # Branch 2
         x2 = self.layer4_2(f)
