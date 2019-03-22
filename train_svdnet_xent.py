@@ -377,7 +377,7 @@ def train_base(model):
 
     optimizer_getter = get_base_sgd_optimizer if use_sgd else get_base_optimizer
 
-    optimizer, scheduler = optimizer_getter(model)
+    optimizer, scheduler = get_base_optimizer(model)
 
     model.train()
     print('=== train base ===')
