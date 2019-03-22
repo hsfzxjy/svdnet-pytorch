@@ -415,6 +415,9 @@ class BranchedResNet(nn.Module):
             x2_part = self.classifier2_2(x2_part)
             xent_features.append(x2_part)
 
+        print([x.size() for x in predict_features])
+        print([x.size() for x in xent_features])
+
         if not self.training:
             return torch.cat(predict_features, 1)
 
