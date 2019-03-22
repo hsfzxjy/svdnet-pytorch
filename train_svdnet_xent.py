@@ -296,7 +296,7 @@ def get_base_sgd_optimizer(model):
 
     kwargs = {
         'weight_decay': 5e-4,
-        'lr': 0.01,
+        'lr': 0.001,
         'momentum': 0.9,
     }
 
