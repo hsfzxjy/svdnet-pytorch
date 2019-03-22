@@ -378,7 +378,7 @@ class BranchedResNet(nn.Module):
         x2 = self.reduction(x2)
 
         x2_part = x2[:, :, 0:12, :]
-        x2_part = self.global_avgpool(x2_part).sequeeze()
+        x2_part = self.global_avgpool(x2_part).squeeze()
         x2_part = self.fc2_1(x2_part)
         x2_part = self.dropout(x2_part)
         predict_features.append(x2_part)
