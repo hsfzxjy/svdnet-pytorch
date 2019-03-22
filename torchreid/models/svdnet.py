@@ -245,7 +245,7 @@ class BranchedResNet(nn.Module):
                  dropout_p=None,
                  **kwargs):
         self.inplanes = 64
-        super(ResNet, self).__init__()
+        super().__init__()
         self.loss = loss
         self.feature_dim = 512 * block.expansion
 
