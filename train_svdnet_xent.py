@@ -316,6 +316,8 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
                 galleryloader = testloader_dict[name]['gallery']
                 rank1 = test(model, queryloader, galleryloader, use_gpu)
 
+        print(eigen_layer.weight)
+
     save_checkpoint({
         'state_dict': model.state_dict(),
         'rank1': rank1,
@@ -323,8 +325,6 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
         'arch': args.arch,
         'optimizer': (),
     }, args.save_dir, prefix=prefix)
-
-    print(eigen_layer.weight)
 
 
 def train_base(model):
