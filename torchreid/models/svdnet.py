@@ -1,6 +1,7 @@
 from __future__ import absolute_import
 from __future__ import division
 
+from copy import deepcopy
 import torch
 from torch import nn
 from torch.nn import functional as F
@@ -8,7 +9,7 @@ import torchvision
 import torch.utils.model_zoo as model_zoo
 
 
-__all__ = ['svdnet_fc1024']
+__all__ = ['svdnet_fc1024', 'branched_svdnet']
 
 
 model_urls = {
@@ -231,6 +232,178 @@ class ResNet(nn.Module):
             raise KeyError("Unsupported loss: {}".format(self.loss))
 
 
+class BranchedResNet(nn.Module):
+    """Residual network
+
+    Reference:
+    He et al. Deep Residual Learning for Image Recognition. CVPR 2016.
+    """
+
+    def __init__(self, num_classes, loss, block, layers,
+                 last_stride=2,
+                 fc_dims=None,
+                 dropout_p=None,
+                 **kwargs):
+        self.inplanes = 64
+        super(ResNet, self).__init__()
+        self.loss = loss
+        self.feature_dim = 512 * block.expansion
+
+        resnet_backbone = ResNet(num_classes, loss, block, layers, last_stride=1, fc_dims=[1024], **kwargs)
+        init_pretrained_weights(resnet_backbone, model_urls['resnet50'])
+
+        # backbone network
+        self.conv1 = resnet_backbone.conv1
+        self.bn1 = resnet_backbone.bn1
+        self.relu = resnet_backbone.relu
+        self.maxpool = resnet_backbone.maxpool
+        self.layer1 = resnet_backbone.layer1
+        self.layer2 = resnet_backbone.layer2
+        self.layer3 = resnet_backbone.layer3
+        self.layer4_1 = resnet_backbone.layer4
+        self.layer4_2 = deepcopy(self.layer4_1)
+
+        self.global_avgpool = nn.AdaptiveAvgPool2d(1)
+        # self.fc = self._construct_fc_layer(fc_dims, 512 * block.expansion, dropout_p)
+        self.fc = self._construct_fc_layer([1024], 2048, 0.5)
+        self.fc2_1 = nn.Linear(1024, 1024, bias=False)
+        self.fc2_2 = nn.Linear(1024, 1024, bias=False)
+
+        self.reduction = nn.Sequential(
+            nn.Conv2d(2048, 1024, kernel_size=1, bias=False),
+            nn.BatchNorm2d(1024),
+            nn.ReLU(inplace=True),
+            nn.Dropout(0.5)
+        )
+
+        self.fc_dropout = nn.Dropout(p=0.5)
+        self.feature_dim = fc_dims[0]
+        self.classifier1 = nn.Linear(1024, num_classes)
+        self.classifier2_1 = nn.Linear(1024, num_classes)
+        self.classifier2_2 = nn.Linear(1024, num_classes)
+
+        self._init_params()
+
+    def _make_layer(self, block, planes, blocks, stride=1):
+        downsample = None
+        if stride != 1 or self.inplanes != planes * block.expansion:
+            downsample = nn.Sequential(
+                nn.Conv2d(self.inplanes, planes * block.expansion,
+                          kernel_size=1, stride=stride, bias=False),
+                nn.BatchNorm2d(planes * block.expansion),
+            )
+
+        layers = []
+        layers.append(block(self.inplanes, planes, stride, downsample))
+        self.inplanes = planes * block.expansion
+        for i in range(1, blocks):
+            layers.append(block(self.inplanes, planes))
+
+        return nn.Sequential(*layers)
+
+    def _construct_fc_layer(self, fc_dims, input_dim, dropout_p=None):
+        """Constructs fully connected layer
+
+        Args:
+            fc_dims (list or tuple): dimensions of fc layers, if None, no fc layers are constructed
+            input_dim (int): input dimension
+            dropout_p (float): dropout probability, if None, dropout is unused
+        """
+        if fc_dims is None:
+            self.feature_dim = input_dim
+            return None
+
+        assert isinstance(fc_dims, (list, tuple)), 'fc_dims must be either list or tuple, but got {}'.format(type(fc_dims))
+
+        layers = []
+        for dim in fc_dims:
+            layers.append(nn.Linear(input_dim, dim))
+            layers.append(nn.BatchNorm1d(dim))
+            layers.append(nn.ReLU(inplace=True))
+            if dropout_p is not None:
+                layers.append(nn.Dropout(p=dropout_p))
+            input_dim = dim
+
+        self.feature_dim = fc_dims[-1]
+
+        return nn.Sequential(*layers)
+
+    def _init_params(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm1d):
+                nn.init.constant_(m.weight, 1)
+                nn.init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                nn.init.normal_(m.weight, 0, 0.01)
+                if m.bias is not None:
+                    nn.init.constant_(m.bias, 0)
+
+    def featuremaps(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = self.relu(x)
+        x = self.maxpool(x)
+        x = self.layer1(x)
+        x = self.layer2(x)
+        x = self.layer3(x)
+        return x
+
+    def get_fcs(self):
+
+        return [self.fc2_1, self.fc2_2]
+
+    def forward(self, x):
+        f = self.featuremaps(x)
+
+        predict_features = []
+        xent_features = []
+
+        # Branch 1
+        x1 = self.layer4_1(f)
+        x1 = self.global_avgpool(x1).squeeze()
+        x1 = self.fc(x1)
+        predict_features.append(x1)
+        x1 = self.classifier1(x1)
+        xent_features.append(x1)
+
+        # Branch 2
+        x2 = self.layer4_2(f)
+        x2 = self.reduction(x2)
+
+        x2_part = x2[:, :, 0:12, :]
+        x2_part = self.global_avgpool(x2_part).sequeeze()
+        x2_part = self.fc2_1(x2_part)
+        x2_part = self.dropout(x2_part)
+        predict_features.append(x2_part)
+        x2_part = self.classifier2_1(x2_part)
+        xent_features.append(x2_part)
+
+        x2_part = x2[:, :, 12:24, :]
+        x2_part = self.global_avgpool(x2_part).squeeze()
+        x2_part = self.fc2_2(x2_part)
+        x2_part = self.dropout(x2_part)
+        predict_features.append(x2_part)
+        x2_part = self.classifier2_2(x2_part)
+        xent_features.append(x2_part)
+
+        if not self.training:
+            return torch.cat(predict_features, 1)
+
+        if self.loss == {'xent'}:
+            return tuple(xent_features)
+        elif self.loss == {'xent', 'htri'}:
+            return NotImplemented
+        else:
+            raise KeyError("Unsupported loss: {}".format(self.loss))
+
+
 def init_pretrained_weights(model, model_url):
     """Initializes model with pretrained weights.
 
@@ -268,4 +441,20 @@ def svdnet_fc1024(num_classes, loss={'xent'}, pretrained=True, **kwargs):
     )
     if pretrained:
         init_pretrained_weights(model, model_urls['resnet50'])
+    return model
+
+
+def branched_svdnet(num_classes, loss={'xent'}, pretrained=True, **kwargs):
+    model = BranchedResNet(
+        num_classes=num_classes,
+        loss=loss,
+        block=Bottleneck,
+        layers=[3, 4, 6, 3],
+        last_stride=1,
+        fc_dims=[1024],
+        dropout_p=None,
+        **kwargs
+    )
+    # if pretrained:
+    #     init_pretrained_weights(model, model_urls['resnet50'])
     return model

@@ -1,7 +1,7 @@
 from __future__ import absolute_import
 
 from .resnet import *
-from .svdnet import svdnet_fc1024
+from .svdnet import svdnet_fc1024, branched_svdnet
 from .resnetmid import *
 from .resnext import *
 from .senet import *
@@ -24,6 +24,7 @@ from .mlfn import *
 __model_factory = {
     # image classification models
     'svdnet_fc1024': svdnet_fc1024,
+    'branched_svdnet': branched_svdnet,
     'resnet50': resnet50,
     'resnet50_fc512': resnet50_fc512,
     'resnext50_32x4d': resnext50_32x4d,
