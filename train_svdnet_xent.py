@@ -324,6 +324,8 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
         'optimizer': (),
     }, args.save_dir, prefix=prefix)
 
+    print(eigen_layer.weight)
+
 
 def train_base(model):
 
