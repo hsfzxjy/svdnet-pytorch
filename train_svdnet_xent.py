@@ -80,6 +80,7 @@ def replace_weight(layer):
 
             # Remove selected column vector from W
             W = W[:, sorted({x for x in range(curr_N) if x != maxco_index})]
+            print('W', W.size())
 
         layer.weight.copy_(NW.t())
         print(layer.weight)
