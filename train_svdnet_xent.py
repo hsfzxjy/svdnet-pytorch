@@ -59,7 +59,7 @@ def replace_weight(layer):
 
         NW = torch.zeros_like(A)
 
-        for i in range(dim):
+        for i in range(N):
 
             curr_N = W.size(1)
 
@@ -343,7 +343,7 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
 
         print('=> Test')
 
-        if (epoch + 1) % 5 == 0:
+        if (epoch + 1) % 2 == 0:
             for name in args.target_names:
                 print('Evaluating {} ...'.format(name))
                 queryloader = testloader_dict[name]['query']
