@@ -276,6 +276,7 @@ class BranchedResNet(nn.Module):
                 nn.ReLU(inplace=True),
                 nn.Dropout(0.5)
             )
+            self._init_params(self.reduction)
             input_dim = 1024
         else:
             input_dim = 2048
@@ -289,24 +290,11 @@ class BranchedResNet(nn.Module):
         self.classifier2_1 = nn.Linear(1024, num_classes)
         self.classifier2_2 = nn.Linear(1024, num_classes)
 
-        self._init_params()
-
-    def _make_layer(self, block, planes, blocks, stride=1):
-        downsample = None
-        if stride != 1 or self.inplanes != planes * block.expansion:
-            downsample = nn.Sequential(
-                nn.Conv2d(self.inplanes, planes * block.expansion,
-                          kernel_size=1, stride=stride, bias=False),
-                nn.BatchNorm2d(planes * block.expansion),
-            )
-
-        layers = []
-        layers.append(block(self.inplanes, planes, stride, downsample))
-        self.inplanes = planes * block.expansion
-        for i in range(1, blocks):
-            layers.append(block(self.inplanes, planes))
-
-        return nn.Sequential(*layers)
+        self._init_params(self.fc2_1)
+        self._init_params(self.fc2_2)
+        self._init_params(self.classifier1)
+        self._init_params(self.classifier2_1)
+        self._init_params(self.classifier2_2)
 
     def _construct_fc_layer(self, fc_dims, input_dim, dropout_p=None):
         """Constructs fully connected layer
@@ -335,8 +323,8 @@ class BranchedResNet(nn.Module):
 
         return nn.Sequential(*layers)
 
-    def _init_params(self):
-        for m in self.modules():
+    def _init_params(self, mx):
+        for m in mx.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
                 if m.bias is not None:
@@ -414,9 +402,6 @@ class BranchedResNet(nn.Module):
             predict_features.append(x2_part)
             x2_part = self.classifier2_2(x2_part)
             xent_features.append(x2_part)
-
-        print([x.size() for x in predict_features])
-        print([x.size() for x in xent_features])
 
         if not self.training:
             return torch.cat(predict_features, 1)
