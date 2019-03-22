@@ -109,11 +109,12 @@ def open_specified_layers(model, open_layers):
     if isinstance(model, nn.DataParallel):
         model = model.module
 
-    for layer in open_layers:
-        assert hasattr(model, layer), '"{}" is not an attribute of the model, please provide the correct name'.format(layer)
+    # for layer in open_layers:
+    #     assert hasattr(model, layer), '"{}" is not an attribute of the model, please provide the correct name'.format(layer)
 
     for name, module in model.named_children():
         if name in open_layers:
+            print('open', name)
             module.train()
             for p in module.parameters():
                 p.requires_grad = True

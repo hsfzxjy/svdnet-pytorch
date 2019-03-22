@@ -362,7 +362,7 @@ def train_base(model):
     model.train()
     print('=== train base ===')
 
-    open_layers = ['fc', 'classifier1', 'classifier2_1', 'classifier2_2', 'fc2_1', 'fc2_2', 'reduction']
+    open_layers = ['fc', 'classifier1', 'classifier2_1', 'classifier2_2', 'fc2_1', 'fc2_2', 'reduction', 'classifier']
 
     print('Train {} for {} epochs while keeping other layers frozen'.format(open_layers, 10))
 
