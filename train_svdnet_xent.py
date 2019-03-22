@@ -49,13 +49,14 @@ def replace_weight(layer):
 
     with torch.no_grad():
         A = layer.weight
-        print(A.size())
-        raise RuntimeError
+        # print(A.size())
+        # raise RuntimeError
         U, S, V = torch.svd(A, some=False)
-        rect_S = torch.zeros_like(A)
-        N = S.size(0)
-        rect_S[:N, :N] = S.diag()
-        layer.weight.copy_(U @ rect_S)
+        # rect_S = torch.zeros_like(A)
+        # N = S.size(0)
+        # rect_S[:N, :N] = S.diag()
+        # layer.weight.copy_(U @ rect_S)
+        layer.weight.copy_(U.t() @ A)
         print(layer.weight)
 
     return layer
@@ -284,6 +285,12 @@ def get_RRI_optimizer(
 
 
 def train_R(model, lr, T, fix_eigen_layer: bool=False):
+
+    for name in args.target_names:
+        print('Evaluating {} ...'.format(name))
+        queryloader = testloader_dict[name]['query']
+        galleryloader = testloader_dict[name]['gallery']
+        rank1 = test(model, queryloader, galleryloader, use_gpu)
 
     eigen_layer = model.module.fc
     if fix_eigen_layer:
