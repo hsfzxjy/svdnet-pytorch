@@ -225,7 +225,7 @@ class ResNet(nn.Module):
         y = self.classifier(v)
 
         if self.loss == {'xent'}:
-            return y
+            return [y]
         elif self.loss == {'xent', 'htri'}:
             return y, v
         else:
