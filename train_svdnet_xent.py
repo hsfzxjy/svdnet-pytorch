@@ -378,6 +378,7 @@ def train_base(model):
 
     for epoch in range(60):
         train(epoch, model, criterion, optimizer, trainloader, use_gpu=use_gpu)
+        scheduler.step()
 
         print('=> Test')
 
