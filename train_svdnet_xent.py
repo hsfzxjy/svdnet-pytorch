@@ -366,13 +366,13 @@ def train_base(model):
 
     print('Train {} for {} epochs while keeping other layers frozen'.format(open_layers, 10))
 
-    args.open_layers = open_layers
-
     for epoch in range(10):
 
-        train(epoch, model, criterion, optimizer, trainloader, use_gpu, fixbase=True)
+        open_specified_layers(model, open_layers)
+        train(epoch, model, criterion, optimizer, trainloader, use_gpu)
 
     print('Done. All layers are open to train for {} epochs'.format(60))
+    open_all_layers(model)
 
     optimizer, scheduler = get_base_optimizer(model)
 
