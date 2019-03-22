@@ -47,9 +47,14 @@ def corr_metric(W: 'K x N'):
 
 def replace_weight(layer):
 
-    _, _, V = torch.svd(layer.weight, some=False)
     with torch.no_grad():
-        layer.weight.copy_(layer.weight.clone() @ V.clone())
+        A = layer.weight
+        U, S, V = torch.svd(A, some=False)
+        rect_S = torch.zeros_like(A)
+        N = S.size(0)
+        rect_S[:N, :N] = S.diag()
+        layer.weight.copy_(U @ rect_S)
+        print(layer.weight)
 
     return layer
 
@@ -304,11 +309,12 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
 
         print('=> Test')
 
-        for name in args.target_names:
-            print('Evaluating {} ...'.format(name))
-            queryloader = testloader_dict[name]['query']
-            galleryloader = testloader_dict[name]['gallery']
-            rank1 = test(model, queryloader, galleryloader, use_gpu)
+        if (epoch + 1) % 10 == 0:
+            for name in args.target_names:
+                print('Evaluating {} ...'.format(name))
+                queryloader = testloader_dict[name]['query']
+                galleryloader = testloader_dict[name]['gallery']
+                rank1 = test(model, queryloader, galleryloader, use_gpu)
 
     save_checkpoint({
         'state_dict': model.state_dict(),
@@ -330,11 +336,13 @@ def train_base(model):
 
         print('=> Test')
 
-        for name in args.target_names:
-            print('Evaluating {} ...'.format(name))
-            queryloader = testloader_dict[name]['query']
-            galleryloader = testloader_dict[name]['gallery']
-            rank1 = test(model, queryloader, galleryloader, use_gpu)  # noqa
+        if (epoch + 1) % 10 == 0:
+
+            for name in args.target_names:
+                print('Evaluating {} ...'.format(name))
+                queryloader = testloader_dict[name]['query']
+                galleryloader = testloader_dict[name]['gallery']
+                rank1 = test(model, queryloader, galleryloader, use_gpu)
 
     save_checkpoint({
         'state_dict': model.state_dict(),

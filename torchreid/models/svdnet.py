@@ -127,6 +127,7 @@ class ResNet(nn.Module):
         self.global_avgpool = nn.AdaptiveAvgPool2d(1)
         # self.fc = self._construct_fc_layer(fc_dims, 512 * block.expansion, dropout_p)
         self.fc = nn.Linear(512 * block.expansion, fc_dims[0], bias=False)
+        self.dropout = nn.Dropout(p=0.5)
         self.feature_dim = fc_dims[0]
         self.classifier = nn.Linear(self.feature_dim, num_classes)
 
@@ -211,6 +212,7 @@ class ResNet(nn.Module):
 
         if self.fc is not None:
             v = self.fc(v)
+            v = self.dropout(v)
 
         if not self.training:
             return v
