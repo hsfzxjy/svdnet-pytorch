@@ -268,15 +268,20 @@ class BranchedResNet(nn.Module):
         self.global_avgpool = nn.AdaptiveAvgPool2d(1)
         # self.fc = self._construct_fc_layer(fc_dims, 512 * block.expansion, dropout_p)
         self.fc = self._construct_fc_layer([1024], 2048, 0.5)
-        self.fc2_1 = nn.Linear(1024, 1024, bias=False)
-        self.fc2_2 = nn.Linear(1024, 1024, bias=False)
 
-        self.reduction = nn.Sequential(
-            nn.Conv2d(2048, 1024, kernel_size=1, bias=False),
-            nn.BatchNorm2d(1024),
-            nn.ReLU(inplace=True),
-            nn.Dropout(0.5)
-        )
+        if not os.environ.get('no_reduction'):
+            self.reduction = nn.Sequential(
+                nn.Conv2d(2048, 1024, kernel_size=1, bias=False),
+                nn.BatchNorm2d(1024),
+                nn.ReLU(inplace=True),
+                nn.Dropout(0.5)
+            )
+            input_dim = 1024
+        else:
+            input_dim = 2048
+
+        self.fc2_1 = nn.Linear(input_dim, 1024, bias=False)
+        self.fc2_2 = nn.Linear(input_dim, 1024, bias=False)
 
         self.fc_dropout = nn.Dropout(p=0.5)
         self.feature_dim = fc_dims[0]
@@ -378,7 +383,9 @@ class BranchedResNet(nn.Module):
 
         # Branch 2
         x2 = self.layer4_2(f)
-        x2 = self.reduction(x2)
+
+        if not os.environ.get('no_reduction'):
+            x2 = self.reduction(x2)
 
         if not os.environ.get('b1'):
 
