@@ -48,15 +48,40 @@ def corr_metric(W: 'K x N'):
 def replace_weight(layer):
 
     with torch.no_grad():
-        A = layer.weight
-        # print(A.size())
-        # raise RuntimeError
+        # NECESSARY! The weight of Linear layer has been transposed!
+        A = layer.weight.t()
+        M, N = A.size()
+        M: 2048
+        N: 1024
         U, S, V = torch.svd(A, some=False)
-        # rect_S = torch.zeros_like(A)
-        # N = S.size(0)
-        # rect_S[:N, :N] = S.diag()
-        # layer.weight.copy_(A @ V)
-        layer.weight.copy_(U.t() @ A)
+        W = S @ V
+        W: '2048 x 1024 = M x N'
+
+        NW = torch.zeros_like(A)
+
+        for i in range(dim):
+
+            curr_N = W.size(1)
+
+            W_norm = torch.norm(W, p=2, dim=0)
+            W_norm: 'curr_N'
+
+            index = i
+            vec_i = A[:, i]
+            vec_i_norm = torch.norm(vec_i)
+
+            co = (A[:, i].view(M, 1).t() @ W).view(curr_N)
+            co: 'curr_N'
+            co = co / vec_i_norm
+            absco = abs(co / W_norm)
+            maxco_index = torch.max(absco, 0)[1].item()
+
+            NW[:, index] = W[:, maxco_index] * torch.sign(co[maxco_index])
+
+            # Remove selected column vector from W
+            W = W[:, sorted({x for x in range(curr_N) if x != maxco_index})]
+
+        layer.weight.copy_(NW.t())
         print(layer.weight)
 
     return layer
