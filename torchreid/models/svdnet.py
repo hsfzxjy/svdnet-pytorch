@@ -380,21 +380,33 @@ class BranchedResNet(nn.Module):
         x2 = self.layer4_2(f)
         x2 = self.reduction(x2)
 
-        x2_part = x2[:, :, 0:12, :]
-        x2_part = self.global_avgpool(x2_part).squeeze()
-        x2_part = self.fc2_1(x2_part)
-        x2_part = self.fc_dropout(x2_part)
-        predict_features.append(x2_part)
-        x2_part = self.classifier2_1(x2_part)
-        xent_features.append(x2_part)
+        if not os.environ.get('b1'):
 
-        x2_part = x2[:, :, 12:24, :]
-        x2_part = self.global_avgpool(x2_part).squeeze()
-        x2_part = self.fc2_2(x2_part)
-        x2_part = self.fc_dropout(x2_part)
-        predict_features.append(x2_part)
-        x2_part = self.classifier2_2(x2_part)
-        xent_features.append(x2_part)
+            x2_part = x2[:, :, 0:12, :]
+            x2_part = self.global_avgpool(x2_part).squeeze()
+            x2_part = self.fc2_1(x2_part)
+            x2_part = self.fc_dropout(x2_part)
+            predict_features.append(x2_part)
+            x2_part = self.classifier2_1(x2_part)
+            xent_features.append(x2_part)
+
+            x2_part = x2[:, :, 12:24, :]
+            x2_part = self.global_avgpool(x2_part).squeeze()
+            x2_part = self.fc2_2(x2_part)
+            x2_part = self.fc_dropout(x2_part)
+            predict_features.append(x2_part)
+            x2_part = self.classifier2_2(x2_part)
+            xent_features.append(x2_part)
+
+        else:
+
+            x2_part = x2
+            x2_part = self.global_avgpool(x2_part).squeeze()
+            x2_part = self.fc2_2(x2_part)
+            x2_part = self.fc_dropout(x2_part)
+            predict_features.append(x2_part)
+            x2_part = self.classifier2_2(x2_part)
+            xent_features.append(x2_part)
 
         if not self.training:
             return torch.cat(predict_features, 1)
