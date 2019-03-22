@@ -369,7 +369,7 @@ def train_base(model):
     for epoch in range(10):
 
         open_specified_layers(model, open_layers)
-        train(epoch, model, criterion, optimizer, trainloader, use_gpu)
+        train(epoch, model, criterion, optimizer, trainloader, use_gpu, fixbase=True)
 
     print('Done. All layers are open to train for {} epochs'.format(60))
     open_all_layers(model)
