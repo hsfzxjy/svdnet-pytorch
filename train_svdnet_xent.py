@@ -292,6 +292,22 @@ def get_base_optimizer(model):
     return optimizer, scheduler
 
 
+def get_base_sgd_optimizer(model):
+
+    kwargs = {
+        'weight_decay': 5e-4,
+        'lr': 0.001,
+        'momentum': 0.9,
+    }
+
+    param_groups = model.parameters()
+
+    optimizer = torch.optim.SGD(param_groups, **kwargs)
+    scheduler = init_lr_scheduler(optimizer, stepsize=[25, 50], gamma=0.1)
+
+    return optimizer, scheduler
+
+
 def get_RRI_optimizer(
     model,
     lr
@@ -357,7 +373,11 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
 
 def train_base(model):
 
-    optimizer, scheduler = get_base_optimizer(model)
+    use_sgd = os.environ.get('sgd') is not None
+
+    optimizer_getter = get_base_sgd_optimizer if use_sgd else get_base_optimizer
+
+    optimizer, scheduler = optimizer_getter(model)
 
     model.train()
     print('=== train base ===')
@@ -366,15 +386,16 @@ def train_base(model):
 
     print('Train {} for {} epochs while keeping other layers frozen'.format(open_layers, 10))
 
-    for epoch in range(10):
+    if not use_sgd:
+        for epoch in range(10):
 
-        open_specified_layers(model, open_layers)
-        train(epoch, model, criterion, optimizer, trainloader, use_gpu, fixbase=True)
+            open_specified_layers(model, open_layers)
+            train(epoch, model, criterion, optimizer, trainloader, use_gpu, fixbase=True)
 
     print('Done. All layers are open to train for {} epochs'.format(60))
     open_all_layers(model)
 
-    optimizer, scheduler = get_base_optimizer(model)
+    optimizer, scheduler = optimizer_getter(model)
 
     for epoch in range(60):
         train(epoch, model, criterion, optimizer, trainloader, use_gpu=use_gpu)
