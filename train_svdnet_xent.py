@@ -282,7 +282,7 @@ def get_base_optimizer(model):
     kwargs = {
         'weight_decay': 5e-4,
         'lr': 0.0003,
-        'momentum': 0.9,
+        'betas': (0.9, 0.999),
     }
     param_groups = model.parameters()
 
