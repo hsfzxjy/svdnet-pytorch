@@ -281,13 +281,13 @@ def get_base_optimizer(model):
 
     kwargs = {
         'weight_decay': 5e-4,
-        'lr': 0.001,
+        'lr': 0.0003,
         'momentum': 0.9,
     }
     param_groups = model.parameters()
 
-    optimizer = torch.optim.SGD(param_groups, **kwargs)
-    scheduler = init_lr_scheduler(optimizer, stepsize=[25, 50], gamma=0.1)
+    optimizer = torch.optim.Adam(param_groups, **kwargs)
+    scheduler = init_lr_scheduler(optimizer, stepsize=[20, 40], gamma=0.1)
 
     return optimizer, scheduler
 
@@ -361,7 +361,22 @@ def train_base(model):
 
     model.train()
     print('=== train base ===')
-    for epoch in range(61):
+
+    open_layers = ['fc', 'classifier1', 'classifier2_1', 'classifier2_2', 'fc2_1', 'fc2_2', 'reduction']
+
+    print('Train {} for {} epochs while keeping other layers frozen'.format(open_layers, 10))
+
+    args.open_layers = open_layers
+
+    for epoch in range(10):
+
+        train(epoch, model, criterion, optimizer, trainloader, use_gpu, fixbase=True)
+
+    print('Done. All layers are open to train for {} epochs'.format(60))
+
+    optimizer, scheduler = get_base_optimizer(model)
+
+    for epoch in range(60):
         train(epoch, model, criterion, optimizer, trainloader, use_gpu=use_gpu)
 
         print('=> Test')
