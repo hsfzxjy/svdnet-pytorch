@@ -54,7 +54,7 @@ def replace_weight(layer):
         M: 2048
         N: 1024
         U, S, V = torch.svd(A, some=False)
-        W = S @ V
+        W = A @ V
         W: '2048 x 1024 = M x N'
 
         NW = torch.zeros_like(A)
