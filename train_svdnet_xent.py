@@ -55,8 +55,8 @@ def replace_weight(layer):
         # rect_S = torch.zeros_like(A)
         # N = S.size(0)
         # rect_S[:N, :N] = S.diag()
-        layer.weight.copy_(A @ V)
-        # layer.weight.copy_(U.t() @ A)
+        # layer.weight.copy_(A @ V)
+        layer.weight.copy_(U.t() @ A)
         print(layer.weight)
 
     return layer
