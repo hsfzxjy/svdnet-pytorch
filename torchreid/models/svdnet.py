@@ -205,6 +205,10 @@ class ResNet(nn.Module):
         x = self.layer4(x)
         return x
 
+    def get_fcs(self):
+
+        return [self.fc]
+
     def forward(self, x):
         f = self.featuremaps(x)
         v = self.global_avgpool(f)

@@ -80,7 +80,6 @@ def replace_weight(layer):
 
             # Remove selected column vector from W
             W = W[:, sorted({x for x in range(curr_N) if x != maxco_index})]
-            print('W', W.size())
 
         layer.weight.copy_(NW.t())
         print(layer.weight)
@@ -312,18 +311,13 @@ def get_RRI_optimizer(
 
 def train_R(model, lr, T, fix_eigen_layer: bool=False):
 
-    for name in args.target_names:
-        print('Evaluating {} ...'.format(name))
-        queryloader = testloader_dict[name]['query']
-        galleryloader = testloader_dict[name]['gallery']
-        rank1 = test(model, queryloader, galleryloader, use_gpu)
+    eigen_layers = model.module.get_fcs()
 
-    eigen_layer = model.module.fc
     if fix_eigen_layer:
-        eigen_layer.eval()
-        for p in eigen_layer.parameters():
-            p.requires_grad = False
-        print(eigen_layer.weight.requires_grad)
+        for eigen_layer in eigen_layers:
+            eigen_layer.eval()
+            for p in eigen_layer.parameters():
+                p.requires_grad = False
 
         stage_name = 'restraint'
     else:
@@ -344,14 +338,12 @@ def train_R(model, lr, T, fix_eigen_layer: bool=False):
 
         print('=> Test')
 
-        if (epoch + 1) % 2 == 0:
+        if (epoch + 1) % args.eval_freq == 0:
             for name in args.target_names:
                 print('Evaluating {} ...'.format(name))
                 queryloader = testloader_dict[name]['query']
                 galleryloader = testloader_dict[name]['gallery']
                 rank1 = test(model, queryloader, galleryloader, use_gpu)
-
-        print(eigen_layer.weight)
 
     save_checkpoint({
         'state_dict': model.state_dict(),
@@ -373,7 +365,7 @@ def train_base(model):
 
         print('=> Test')
 
-        if (epoch + 1) % 5 == 0:
+        if (epoch + 1) % args.eval_freq == 0:
 
             for name in args.target_names:
                 print('Evaluating {} ...'.format(name))
@@ -397,7 +389,8 @@ def train_RRI(model, Ts: int=7):
     for T in range(Ts):
         print('=== T = {} ==='.format(T))
         print('Replacing eigen layer weight...')
-        replace_weight(model.module.fc)
+        for eigen_layer in model.module.get_fcs():
+            replace_weight(eigen_layer)
         print('Replaced.')
         print('--- Restraint ({}) ---'.format(T))
         train_R(model, base_lrs[T], T, fix_eigen_layer=True)
